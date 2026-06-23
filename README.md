@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v2.0.2 | [`v2.0.2`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.2) | [`c642db5`](https://github.com/reitzig/actions-asciidoctor/commit/c642db5eedd1d729bb8c92034770d0b2f769eda6) |
+| v2.0.3 | [`v2.0.3`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.3) | [`8c525a8`](https://github.com/reitzig/actions-asciidoctor/commit/8c525a8e95a8e827f0415fe7cfb83f961fd59d16) |
 
 ## Privacy
 
