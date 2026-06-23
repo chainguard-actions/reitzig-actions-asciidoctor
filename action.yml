@@ -1,0 +1,17 @@
+name: 'Asciidoctor Setup'
+description: 'Install and set up asciidoctor quickly.'
+author: 'reitzig'
+inputs:
+  version:
+    description: |
+      The version of asciidoctor to install.
+      Example: 2.0.10
+    required: false
+    default: '~>2.0'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+  pre: chainguard-phonehome.js
+branding:
+  icon: 'package'
+  color: 'yellow'
