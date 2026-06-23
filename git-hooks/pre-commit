@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Build the action, cause otherwise I'll certainly forget.
+
+set -eu
+
+exec < /dev/tty
+
+container-do npm install
+git add package-lock.json
+
+container-do ncc build index.js
+git add dist/index.js
