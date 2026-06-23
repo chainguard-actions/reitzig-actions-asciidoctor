@@ -1,16 +1,69 @@
-# reitzig/actions-asciidoctor
+[![license](https://img.shields.io/github/license/reitzig/actions-asciidoctor.svg)](https://github.com/reitzig/actions-asciidoctor/blob/master/LICENSE)
+[![release](https://img.shields.io/github/release/reitzig/actions-asciidoctor.svg)](https://github.com/reitzig/actions-asciidoctor/releases/latest)
+[![GitHub release date](https://img.shields.io/github/release-date/reitzig/actions-asciidoctor.svg)](https://github.com/reitzig/actions-asciidoctor/releases)
+[![Test](https://github.com/reitzig/actions-asciidoctor/actions/workflows/test.yml/badge.svg)](https://github.com/reitzig/actions-asciidoctor/actions/workflows/test.yml)
 
-Install and set up asciidoctor quickly.
+# Asciidoctor Setup Action
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/reitzig/actions-asciidoctor](https://github.com/reitzig/actions-asciidoctor).
+This Action can install
+    [Asciidoctor](https://asciidoctor.org/)
+to a virtual machine of GitHub Actions. 
 
-## Versions
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v2.0.2 | [`v2.0.2`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.2) | [`c642db5`](https://github.com/reitzig/actions-asciidoctor/commit/c642db5eedd1d729bb8c92034770d0b2f769eda6) |
-| v2.0.3 | [`v2.0.3`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.3) | [`8c525a8`](https://github.com/reitzig/actions-asciidoctor/commit/8c525a8e95a8e827f0415fe7cfb83f961fd59d16) |
-| v2.0.4 | [`v2.0.4`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.4) | [`fc32dc8`](https://github.com/reitzig/actions-asciidoctor/commit/fc32dc82a65a0e93b67383531d4c68cec34c7f27) |
+## Usage
+
+Given that Ruby has already been installed 
+(e.g. by [ruby/setup-ruby](https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby)), 
+include this in your workflow:
+
+```yml
+ - uses: reitzig/actions-asciidoctor@v2.0.5
+```
+
+These inputs are allowed:
+
+ - `version` -- a [Gemfile-compatible version string](https://guides.rubygems.org/patterns/#declaring-dependencies)  
+   _Default:_ empty; installs the latest version.
+
+### Working Example
+
+```yml
+name: Asciidoctor Demo
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 4.0
+
+      - uses: reitzig/actions-asciidoctor@v2.0.5
+        with:
+          version: 2.0.26
+
+      - run: asciidoctor --version
+```
+
+
+## Acknowledgements
+
+ - [@peaceiris](https://github.com/peaceiris) lent inspiration, 
+   [example](https://github.com/peaceiris/actions-hugo), and 
+   [pointers](https://github.com/reitzig/today-i-learned/pull/1/).
+ - A bunch of Stackoverflow answers helped cobble this together.
+ - Parts of this project were created during 
+     [20% time](https://en.wikipedia.org/wiki/20%25_Project) 
+   graciously provided by 
+     [codecentric](https://codecentric.de).
+   Thank you!
 
 ## Privacy
 

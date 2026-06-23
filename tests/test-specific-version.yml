@@ -1,0 +1,49 @@
+name: Test specific version installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Ruby and Bundler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
+          ruby --version
+          bundle --version
+      - name: Configure Bundler to install gems system-wide
+        run: |
+          bundle config set --global path /usr/local/bundle
+          bundle config set --global bin /usr/local/bin
+      - id: action
+        uses: .
+        with:
+          version: '2.0.23'
+      - name: Assert asciidoctor is installed
+        run: |
+          echo "Checking asciidoctor is available..."
+          if ! command -v asciidoctor &>/dev/null; then
+            if ! bundle exec asciidoctor --version &>/dev/null 2>&1; then
+              echo "FAIL: asciidoctor command not found"
+              exit 1
+            fi
+            echo "PASS: asciidoctor available via bundle exec"
+          else
+            echo "PASS: asciidoctor is installed"
+            asciidoctor --version
+          fi
+      - name: Assert asciidoctor version matches requested
+        run: |
+          # Try direct command first, fall back to bundle exec
+          if command -v asciidoctor &>/dev/null; then
+            VERSION_OUTPUT=$(asciidoctor --version)
+          else
+            cd actions_asciidoctor && VERSION_OUTPUT=$(bundle exec asciidoctor --version)
+          fi
+          echo "Version output: $VERSION_OUTPUT"
+          if ! echo "$VERSION_OUTPUT" | grep -q "2.0.23"; then
+            echo "FAIL: expected version 2.0.23 but got: $VERSION_OUTPUT"
+            exit 1
+          fi
+          echo "PASS: asciidoctor version 2.0.23 is installed"

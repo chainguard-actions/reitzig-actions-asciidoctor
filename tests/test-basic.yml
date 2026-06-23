@@ -1,0 +1,54 @@
+name: Test basic usage (default version)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Ruby and Bundler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
+          ruby --version
+          bundle --version
+      - name: Configure Bundler to install gems system-wide
+        run: |
+          bundle config set --global path /usr/local/bundle
+          bundle config set --global bin /usr/local/bin
+      - id: action
+        uses: .
+      - name: Assert asciidoctor is installed
+        run: |
+          echo "Checking asciidoctor is available..."
+          if ! command -v asciidoctor &>/dev/null; then
+            # Try bundle exec as fallback
+            if ! bundle exec asciidoctor --version &>/dev/null 2>&1; then
+              echo "FAIL: asciidoctor command not found"
+              exit 1
+            fi
+            echo "PASS: asciidoctor available via bundle exec"
+          else
+            echo "PASS: asciidoctor is installed"
+            asciidoctor --version
+          fi
+      - name: Assert asciidoctor can convert a document
+        run: |
+          echo "= Test Document" > /tmp/test.adoc
+          echo "" >> /tmp/test.adoc
+          echo "Hello, World!" >> /tmp/test.adoc
+          # Try direct command first, fall back to bundle exec
+          if command -v asciidoctor &>/dev/null; then
+            asciidoctor /tmp/test.adoc -o /tmp/test.html
+          else
+            cd actions_asciidoctor && bundle exec asciidoctor /tmp/test.adoc -o /tmp/test.html
+          fi
+          if [ ! -f /tmp/test.html ]; then
+            echo "FAIL: asciidoctor did not produce output file"
+            exit 1
+          fi
+          if ! grep -q "Hello, World!" /tmp/test.html; then
+            echo "FAIL: output HTML does not contain expected content"
+            exit 1
+          fi
+          echo "PASS: asciidoctor successfully converted document"
