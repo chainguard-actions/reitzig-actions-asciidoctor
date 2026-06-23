@@ -1,0 +1,38 @@
+name: Test basic usage (default version)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Ruby and Bundler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
+      - id: setup
+        uses: .
+      - name: Assert asciidoctor is installed
+        run: |
+          echo "Checking asciidoctor is available..."
+          if ! command -v asciidoctor >/dev/null 2>&1; then
+            echo "Trying bundle exec..."
+            if ! bundle exec asciidoctor --version >/dev/null 2>&1; then
+              echo "FAIL: asciidoctor command not found"
+              exit 1
+            fi
+            echo "PASS: asciidoctor is installed (via bundle exec)"
+          else
+            echo "PASS: asciidoctor is installed"
+            asciidoctor --version
+          fi
+      - name: Assert asciidoctor version is 2.x
+        run: |
+          VERSION=$(asciidoctor --version 2>/dev/null | head -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1 || bundle exec asciidoctor --version | head -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          echo "actual version: $VERSION"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          if [ "$MAJOR" != "2" ]; then
+            echo "FAIL: expected major version 2, got $MAJOR"
+            exit 1
+          fi
+          echo "PASS: asciidoctor version $VERSION is 2.x"

@@ -1,0 +1,49 @@
+name: Test asciidoctor can convert a document
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Ruby and Bundler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
+      - id: setup
+        uses: .
+      - name: Create a sample AsciiDoc file
+        run: |
+          cat > /tmp/sample.adoc <<'EOF'
+          = Hello World
+          :author: Test Author
+
+          This is a test document.
+
+          == Section One
+
+          Some content here.
+          EOF
+      - name: Convert AsciiDoc to HTML
+        run: |
+          if command -v asciidoctor >/dev/null 2>&1; then
+            asciidoctor /tmp/sample.adoc -o /tmp/sample.html
+          else
+            cd actions_asciidoctor && bundle exec asciidoctor /tmp/sample.adoc -o /tmp/sample.html
+          fi
+          echo "Conversion exit code: $?"
+      - name: Assert HTML output was created
+        run: |
+          if [ ! -f /tmp/sample.html ]; then
+            echo "FAIL: output HTML file not found"
+            exit 1
+          fi
+          echo "PASS: HTML file was created"
+      - name: Assert HTML contains expected content
+        run: |
+          if ! grep -q "Hello World" /tmp/sample.html; then
+            echo "FAIL: expected 'Hello World' in HTML output"
+            cat /tmp/sample.html
+            exit 1
+          fi
+          echo "PASS: HTML output contains expected content"

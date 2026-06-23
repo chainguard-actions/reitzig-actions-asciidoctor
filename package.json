@@ -1,0 +1,30 @@
+{
+  "name": "actions-asciidoctor",
+  "version": "2.0.0",
+  "description": "GitHub Actions for Asciidoctor",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reitzig/actions-asciidoctor.git"
+  },
+  "keywords": [
+    "github-actions",
+    "asciidoc",
+    "asciidoctor",
+    "setup"
+  ],
+  "author": "reitzig",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reitzig/actions-asciidoctor/issues"
+  },
+  "homepage": "https://github.com/reitzig/actions-asciidoctor#readme",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/exec": "^1.1.1",
+    "@actions/io": "^1.1.3"
+  },
+  "scripts": {
+    "prepare": "npm i -g @vercel/ncc"
+  }
+}
