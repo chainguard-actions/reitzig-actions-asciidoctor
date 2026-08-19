@@ -8,26 +8,39 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install Ruby and Bundler
         run: |
-          apt-get update -qq && apt-get install -y -qq ruby ruby-dev bundler build-essential || true
-          gem install bundler --no-document || true
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby-full build-essential
+          ruby --version
+          gem --version
+          # Install bundler as root so it's available system-wide
+          sudo gem install bundler --no-document
+          bundle --version
+          # Add system gem bin to PATH
+          GEM_BIN=$(ruby -e 'puts Gem.bindir')
+          echo "System gem bin: $GEM_BIN"
+          echo "$GEM_BIN" >> "$GITHUB_PATH"
       - id: action
         uses: .
         with:
-          version: '2.0.10'
-      - name: Assert asciidoctor is installed
+          version: '2.0.20'
+      - name: Assert asciidoctor directory exists
         run: |
-          echo "Checking asciidoctor is available..."
-          if ! command -v asciidoctor &>/dev/null; then
-            echo "FAIL: asciidoctor command not found"
+          echo "Checking actions_asciidoctor directory..."
+          if [ ! -d "$GITHUB_WORKSPACE/actions_asciidoctor" ]; then
+            echo "FAIL: actions_asciidoctor directory not found"
+            ls -la "$GITHUB_WORKSPACE/" || true
             exit 1
           fi
-          echo "PASS: asciidoctor is installed"
-      - name: Assert asciidoctor version is exactly 2.0.10
+          echo "PASS: actions_asciidoctor directory found"
+          ls -la "$GITHUB_WORKSPACE/actions_asciidoctor/"
+      - name: Assert asciidoctor version is exactly 2.0.20
         run: |
-          VERSION=$(asciidoctor --version 2>&1 | head -1)
-          echo "actual version output: $VERSION"
-          if ! echo "$VERSION" | grep -q '2\.0\.10'; then
-            echo "FAIL: expected Asciidoctor 2.0.10, got: $VERSION"
+          echo "Checking asciidoctor version..."
+          VERSION=$(cd "$GITHUB_WORKSPACE/actions_asciidoctor" && bundle exec asciidoctor --version 2>&1 | head -1)
+          echo "Version output: $VERSION"
+          if echo "$VERSION" | grep -q '2\.0\.20'; then
+            echo "PASS: asciidoctor version is 2.0.20"
+          else
+            echo "FAIL: expected version 2.0.20, got: $VERSION"
             exit 1
           fi
-          echo "PASS: asciidoctor version is 2.0.10"
