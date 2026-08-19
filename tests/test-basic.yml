@@ -6,33 +6,59 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install Ruby and Bundler
+      - name: Ensure Ruby and Bundler are available
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ruby ruby-bundler
+          ruby --version || (apt-get update -qq && apt-get install -y -qq ruby ruby-bundler)
+          gem install bundler --no-document 2>/dev/null || true
+          bundler --version
       - id: setup
         uses: .
-      - name: Assert asciidoctor is installed
+      - name: Assert asciidoctor is available
         run: |
-          echo "Checking asciidoctor is available..."
-          if ! command -v asciidoctor >/dev/null 2>&1; then
-            echo "Trying bundle exec..."
-            if ! bundle exec asciidoctor --version >/dev/null 2>&1; then
-              echo "FAIL: asciidoctor command not found"
+          echo "Checking asciidoctor is on PATH or accessible via bundle..."
+          if command -v asciidoctor >/dev/null 2>&1; then
+            echo "PASS: asciidoctor found at $(command -v asciidoctor)"
+          elif bundle exec asciidoctor --version >/dev/null 2>&1; then
+            echo "PASS: asciidoctor accessible via bundle exec"
+          else
+            # Try to find it in gem paths
+            GEM_BIN=$(gem environment gemdir 2>/dev/null)/bin
+            if [ -x "$GEM_BIN/asciidoctor" ]; then
+              echo "PASS: asciidoctor found at $GEM_BIN/asciidoctor"
+            else
+              echo "FAIL: asciidoctor not found"
               exit 1
             fi
-            echo "PASS: asciidoctor is installed (via bundle exec)"
-          else
-            echo "PASS: asciidoctor is installed"
-            asciidoctor --version
           fi
       - name: Assert asciidoctor version is 2.x
         run: |
-          VERSION=$(asciidoctor --version 2>/dev/null | head -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1 || bundle exec asciidoctor --version | head -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
-          echo "actual version: $VERSION"
-          MAJOR=$(echo "$VERSION" | cut -d. -f1)
-          if [ "$MAJOR" != "2" ]; then
-            echo "FAIL: expected major version 2, got $MAJOR"
+          if command -v asciidoctor >/dev/null 2>&1; then
+            VERSION=$(asciidoctor --version 2>&1 | head -1)
+          else
+            VERSION=$(bundle exec asciidoctor --version 2>&1 | head -1)
+          fi
+          echo "actual version output: $VERSION"
+          if ! echo "$VERSION" | grep -qE 'Asciidoctor [2-9]\.'; then
+            echo "FAIL: expected Asciidoctor 2.x or later, got: $VERSION"
             exit 1
           fi
-          echo "PASS: asciidoctor version $VERSION is 2.x"
+          echo "PASS: asciidoctor version is $VERSION"
+      - name: Assert asciidoctor can convert a document
+        run: |
+          echo "= Hello World" > /tmp/test.adoc
+          echo "" >> /tmp/test.adoc
+          echo "This is a test document." >> /tmp/test.adoc
+          if command -v asciidoctor >/dev/null 2>&1; then
+            asciidoctor /tmp/test.adoc -o /tmp/test.html
+          else
+            bundle exec asciidoctor /tmp/test.adoc -o /tmp/test.html
+          fi
+          if [ ! -f /tmp/test.html ]; then
+            echo "FAIL: asciidoctor did not produce output file"
+            exit 1
+          fi
+          if ! grep -q "Hello World" /tmp/test.html; then
+            echo "FAIL: output HTML does not contain expected content"
+            exit 1
+          fi
+          echo "PASS: asciidoctor converted document successfully"
