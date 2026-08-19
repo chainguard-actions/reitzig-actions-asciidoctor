@@ -6,44 +6,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Set up Ruby
+      - name: Install Ruby and Bundler
         run: |
-          which ruby || sudo apt-get update -qq && sudo apt-get install -y ruby-full ruby-bundler
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
           ruby --version
-          gem --version
-          bundle --version || sudo gem install bundler --no-document
           bundle --version
-      - id: setup
+      - id: action
         uses: .
         with:
           version: '2.0.22'
       - name: Assert asciidoctor is installed
         run: |
-          echo "Checking asciidoctor is available..."
-          if command -v asciidoctor &>/dev/null; then
-            echo "PASS: asciidoctor found in PATH"
-          elif gem contents asciidoctor 2>/dev/null | grep -q 'bin/asciidoctor'; then
-            echo "PASS: asciidoctor installed as gem"
-          else
-            cd actions_asciidoctor 2>/dev/null || true
-            if bundle exec asciidoctor --version &>/dev/null; then
-              echo "PASS: asciidoctor available via bundle exec"
-            else
-              echo "FAIL: asciidoctor not found"
-              exit 1
-            fi
-          fi
-      - name: Assert asciidoctor version matches requested
-        run: |
-          # Try multiple ways to get the version
-          if command -v asciidoctor &>/dev/null; then
-            VERSION=$(asciidoctor --version 2>&1 | head -1)
-          else
-            VERSION=$(cd actions_asciidoctor && bundle exec asciidoctor --version 2>&1 | head -1)
-          fi
-          echo "actual version output: $VERSION"
-          if ! echo "$VERSION" | grep -q '2.0.22'; then
-            echo "FAIL: expected version 2.0.22 but got: $VERSION"
+          echo "Checking asciidoctor is on PATH..."
+          if ! command -v asciidoctor > /dev/null 2>&1; then
+            echo "FAIL: asciidoctor not found on PATH"
             exit 1
           fi
-          echo "PASS: version is 2.0.22"
+          echo "PASS: asciidoctor is available"
+          asciidoctor --version
+      - name: Assert asciidoctor version matches requested
+        run: |
+          VERSION_OUTPUT=$(asciidoctor --version 2>&1)
+          echo "Version output: $VERSION_OUTPUT"
+          if ! echo "$VERSION_OUTPUT" | grep -q "2\.0\.22"; then
+            echo "FAIL: expected version 2.0.22 but got: $VERSION_OUTPUT"
+            exit 1
+          fi
+          echo "PASS: asciidoctor version 2.0.22 is installed"

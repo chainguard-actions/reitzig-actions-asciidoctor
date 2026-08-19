@@ -1,0 +1,43 @@
+name: 'Test'
+
+on:
+  push:
+    branches-ignore:
+      - 'wip/*'
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+        - 'ubuntu-latest'
+        - 'macos-latest'
+        - 'windows-latest'
+        ruby-version:
+        - '3.4'
+        - '4.0'
+    steps:
+      # Check out; action built on dev machine to `dist/index.js`!
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      # Run it like we would in the wild:
+      - uses: ruby/setup-ruby@003a5c4d8d6321bd302e38f6f0ec593f77f06600 # v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+
+      - name: Set up asciidoctor
+        uses: ./
+
+      - name: Test
+        run: ruby test/run_tests.rb

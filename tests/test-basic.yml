@@ -6,44 +6,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Set up Ruby
+      - name: Install Ruby and Bundler
         run: |
-          which ruby || sudo apt-get update -qq && sudo apt-get install -y ruby-full ruby-bundler
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
           ruby --version
-          gem --version
-          bundle --version || sudo gem install bundler --no-document
           bundle --version
-      - id: setup
+      - id: action
         uses: .
       - name: Assert asciidoctor is installed
         run: |
-          echo "Checking asciidoctor is available..."
-          # Try direct command first, then via gem bin path
-          if command -v asciidoctor &>/dev/null; then
-            echo "PASS: asciidoctor found in PATH"
-          elif gem contents asciidoctor 2>/dev/null | grep -q 'bin/asciidoctor'; then
-            echo "PASS: asciidoctor installed as gem (may need bundle exec)"
-          else
-            # Check if it's installed in the bundle
-            cd actions_asciidoctor 2>/dev/null || true
-            if bundle exec asciidoctor --version &>/dev/null; then
-              echo "PASS: asciidoctor available via bundle exec"
-            else
-              echo "FAIL: asciidoctor not found"
-              exit 1
-            fi
-          fi
-      - name: Assert asciidoctor version is 2.x
-        run: |
-          # Try multiple ways to get the version
-          if command -v asciidoctor &>/dev/null; then
-            VERSION=$(asciidoctor --version 2>&1 | head -1)
-          else
-            VERSION=$(cd actions_asciidoctor && bundle exec asciidoctor --version 2>&1 | head -1)
-          fi
-          echo "actual version output: $VERSION"
-          if ! echo "$VERSION" | grep -qE 'Asciidoctor [2-9]'; then
-            echo "FAIL: expected Asciidoctor 2.x or later, got: $VERSION"
+          echo "Checking asciidoctor is on PATH..."
+          if ! command -v asciidoctor > /dev/null 2>&1; then
+            echo "FAIL: asciidoctor not found on PATH"
             exit 1
           fi
-          echo "PASS: version is 2.x or later"
+          echo "PASS: asciidoctor is available"
+          asciidoctor --version
+      - name: Assert asciidoctor can convert a document
+        run: |
+          echo "= Test Document" > /tmp/test.adoc
+          echo "" >> /tmp/test.adoc
+          echo "Hello, World!" >> /tmp/test.adoc
+          asciidoctor /tmp/test.adoc -o /tmp/test.html
+          if [ ! -f /tmp/test.html ]; then
+            echo "FAIL: asciidoctor did not produce output file"
+            exit 1
+          fi
+          if ! grep -q "Hello, World!" /tmp/test.html; then
+            echo "FAIL: output HTML does not contain expected content"
+            exit 1
+          fi
+          echo "PASS: asciidoctor converted document successfully"
