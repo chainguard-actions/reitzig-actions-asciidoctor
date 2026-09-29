@@ -1,0 +1,56 @@
+name: Test basic usage (default version)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Ruby and Bundler prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
+          ruby --version
+          bundle --version
+      - id: action
+        uses: .
+      - name: Assert asciidoctor is installed and runnable
+        run: |
+          echo "Checking asciidoctor is available..."
+          # The action installs via bundle install; try direct command first,
+          # then fall back to finding it via gem environment
+          if command -v asciidoctor > /dev/null 2>&1; then
+            VERSION=$(asciidoctor --version)
+            echo "asciidoctor version: $VERSION"
+            echo "PASS: asciidoctor is on PATH"
+          else
+            # Try via bundle exec in the actions_asciidoctor directory
+            if [ -d "actions_asciidoctor" ]; then
+              VERSION=$(cd actions_asciidoctor && bundle exec asciidoctor --version)
+              echo "asciidoctor version (bundle exec): $VERSION"
+              echo "PASS: asciidoctor available via bundle exec"
+            else
+              echo "FAIL: asciidoctor not found and actions_asciidoctor directory missing"
+              exit 1
+            fi
+          fi
+      - name: Assert asciidoctor can convert a document
+        run: |
+          echo "= Test Document" > /tmp/test.adoc
+          echo "" >> /tmp/test.adoc
+          echo "Hello, World!" >> /tmp/test.adoc
+          # Try direct command first, then bundle exec
+          if command -v asciidoctor > /dev/null 2>&1; then
+            asciidoctor /tmp/test.adoc -o /tmp/test.html
+          else
+            cd actions_asciidoctor && bundle exec asciidoctor /tmp/test.adoc -o /tmp/test.html
+          fi
+          if [ ! -f /tmp/test.html ]; then
+            echo "FAIL: asciidoctor did not produce output file"
+            exit 1
+          fi
+          if ! grep -q "Hello, World!" /tmp/test.html; then
+            echo "FAIL: output HTML does not contain expected content"
+            exit 1
+          fi
+          echo "PASS: asciidoctor successfully converted document"

@@ -1,0 +1,53 @@
+name: Test specific version installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Ruby and Bundler prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby ruby-bundler
+          ruby --version
+          bundle --version
+      - id: action
+        uses: .
+        with:
+          version: '2.0.20'
+      - name: Assert asciidoctor is installed at the requested version
+        run: |
+          echo "Checking asciidoctor is available..."
+          # The action installs via bundle install; try direct command first,
+          # then fall back to bundle exec in the actions_asciidoctor directory
+          if command -v asciidoctor > /dev/null 2>&1; then
+            VERSION_OUTPUT=$(asciidoctor --version)
+          elif [ -d "actions_asciidoctor" ]; then
+            VERSION_OUTPUT=$(cd actions_asciidoctor && bundle exec asciidoctor --version)
+          else
+            echo "FAIL: asciidoctor not found and actions_asciidoctor directory missing"
+            exit 1
+          fi
+          echo "asciidoctor version output: $VERSION_OUTPUT"
+          if ! echo "$VERSION_OUTPUT" | grep -q "2\.0\.20"; then
+            echo "FAIL: expected version 2.0.20 but got: $VERSION_OUTPUT"
+            exit 1
+          fi
+          echo "PASS: asciidoctor 2.0.20 is installed"
+      - name: Assert asciidoctor can convert a document
+        run: |
+          echo "= Version Test Document" > /tmp/version-test.adoc
+          echo "" >> /tmp/version-test.adoc
+          echo "Testing specific version." >> /tmp/version-test.adoc
+          # Try direct command first, then bundle exec
+          if command -v asciidoctor > /dev/null 2>&1; then
+            asciidoctor /tmp/version-test.adoc -o /tmp/version-test.html
+          else
+            cd actions_asciidoctor && bundle exec asciidoctor /tmp/version-test.adoc -o /tmp/version-test.html
+          fi
+          if [ ! -f /tmp/version-test.html ]; then
+            echo "FAIL: asciidoctor did not produce output file"
+            exit 1
+          fi
+          echo "PASS: asciidoctor successfully converted document"
