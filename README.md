@@ -13,6 +13,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v2.0.3 | [`v2.0.3`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.3) | [`8c525a8`](https://github.com/reitzig/actions-asciidoctor/commit/8c525a8e95a8e827f0415fe7cfb83f961fd59d16) |
 | v2.0.4 | [`v2.0.4`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.4) | [`fc32dc8`](https://github.com/reitzig/actions-asciidoctor/commit/fc32dc82a65a0e93b67383531d4c68cec34c7f27) |
 | v2.0.5 | [`v2.0.5`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.5) | [`121d08a`](https://github.com/reitzig/actions-asciidoctor/commit/121d08af2fecab340793a31724513f25fb3b50ee) |
+| v2.0.6 | [`v2.0.6`](https://github.com/chainguard-actions/reitzig-actions-asciidoctor/tree/v2.0.6) | [`8834ac5`](https://github.com/reitzig/actions-asciidoctor/commit/8834ac556f8cab579c3181e57d3a269db51a6055) |
 
 ## Privacy
 
